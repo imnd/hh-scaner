@@ -54,11 +54,35 @@
           isParsing = false;
           progressState = null;
           loadVacancies(); // Force refresh list when done
+          playNotificationSound();
         }
       } catch (err) {
         console.error('Failed to poll progress', err);
       }
     }, 1000);
+  }
+
+  function playNotificationSound() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const playBeep = (freq, startTime, duration) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.1, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+      const now = audioCtx.currentTime;
+      playBeep(880, now, 0.15); // A5
+      playBeep(1046.50, now + 0.2, 0.3); // C6
+    } catch (e) {
+      console.error('Audio not supported', e);
+    }
   }
 
   onMount(async () => {
